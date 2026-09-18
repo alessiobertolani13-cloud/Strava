@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logbook Alpinismo</title>
+<meta name="description" content="Diario delle salite in montagna: 124 ascensioni, dislivelli, quote e 4000 delle Alpi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --snow:#e9eef1; --paper:#fafcfd; --paper2:#f1f5f7;
+  --ink:#16232e; --rock:#5c6b76; --faint:#8395a1;
+  --glacier:#2f7c9e; --glacier-deep:#1d5670; --glacier-soft:#bcd6e2;
+  --alpenglow:#e0795e; --alpenglow-soft:#f3d3c6;
+  --line:#d3dbe0; --line-soft:#e4eaee;
+  --shadow:0 1px 2px rgba(22,35,46,.06),0 8px 30px rgba(22,35,46,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --snow:#0e1620; --paper:#16212c; --paper2:#1b2833;
+    --ink:#e7eef2; --rock:#93a4b0; --faint:#6f828f;
+    --glacier:#5aa9cb; --glacier-deep:#2f7c9e; --glacier-soft:#274050;
+    --alpenglow:#f0946b; --alpenglow-soft:#3a2820;
+    --line:#25333f; --line-soft:#1e2b36;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 34px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --snow:#0e1620; --paper:#16212c; --paper2:#1b2833;
+  --ink:#e7eef2; --rock:#93a4b0; --faint:#6f828f;
+  --glacier:#5aa9cb; --glacier-deep:#2f7c9e; --glacier-soft:#274050;
+  --alpenglow:#f0946b; --alpenglow-soft:#3a2820;
+  --line:#25333f; --line-soft:#1e2b36;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 34px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--snow); color:var(--ink);
+  font-family:'Barlow',system-ui,sans-serif; font-size:17px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1020px; margin:0 auto; padding:0 22px}
+h1,h2,h3,.num{font-family:'Barlow Condensed',system-ui,sans-serif; font-weight:600; line-height:1.05; letter-spacing:.01em}
+a{color:var(--glacier)}
+
+/* top bar */
+.top{display:flex; justify-content:space-between; align-items:center; padding:20px 0 4px}
+.mark{font-family:'Barlow Condensed'; font-weight:700; font-size:20px; letter-spacing:.06em; color:var(--rock)}
+.mark b{color:var(--glacier)}
+.tgl{border:1px solid var(--line); background:var(--paper); color:var(--rock); width:38px; height:38px; border-radius:10px; cursor:pointer; display:grid; place-items:center; transition:border-color .2s,color .2s}
+.tgl:hover{color:var(--glacier); border-color:var(--glacier-soft)}
+.tgl svg{width:19px;height:19px}
+
+/* hero */
+.hero{padding:26px 0 8px}
+.hero h1{font-size:clamp(48px,10vw,104px); font-weight:700; margin:0; color:var(--ink)}
+.hero .lead{font-size:clamp(18px,2.4vw,22px); color:var(--rock); max-width:60ch; margin:14px 0 0}
+.ridge{margin:26px 0 6px; width:100%; background:linear-gradient(180deg,transparent,var(--paper2)); border-radius:14px; overflow:hidden; border:1px solid var(--line-soft)}
+.ridge svg{display:block; width:100%; height:auto}
+.ridge-cap{color:var(--faint); font-size:14.5px; margin:8px 2px 0; display:flex; gap:16px; flex-wrap:wrap; align-items:center}
+.legdot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle}
+
+/* stats */
+.stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:14px; overflow:hidden; margin:34px 0}
+.stat{background:var(--paper); padding:22px 20px}
+.stat .n{font-family:'Barlow Condensed'; font-weight:700; font-size:clamp(34px,5vw,50px); color:var(--glacier-deep); letter-spacing:0}
+.stat .n .u{font-size:.42em; color:var(--rock); font-weight:600; margin-left:4px}
+.stat .l{font-size:14.5px; color:var(--rock); margin-top:3px}
+.stat .s{font-size:13px; color:var(--faint); margin-top:2px}
+
+section{margin:56px 0}
+.sec-h{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--line); padding-bottom:10px}
+.sec-h h2{font-size:clamp(26px,4vw,34px); font-weight:600; margin:0; color:var(--ink)}
+.sec-h .hint{color:var(--faint); font-size:14px; text-align:right}
+
+/* 4000 cards */
+.peaks{display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
+.peak{background:var(--paper); border:1px solid var(--line); border-top:3px solid var(--alpenglow); border-radius:12px; padding:18px 16px; box-shadow:var(--shadow)}
+.peak .q{font-family:'Barlow Condensed'; font-weight:700; font-size:40px; color:var(--alpenglow); line-height:1}
+.peak .q .u{font-size:.4em; color:var(--rock); margin-left:3px}
+.peak .nm{font-weight:600; margin:8px 0 2px; font-size:16px}
+.peak .dt{color:var(--faint); font-size:13.5px}
+
+/* charts */
+.charts{display:grid; grid-template-columns:1fr 1fr; gap:24px}
+.card{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:var(--shadow)}
+.card h3{margin:0 0 14px; font-size:19px; font-weight:600; color:var(--ink)}
+.chart-box{position:relative; height:280px}
+
+/* table */
+.controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px}
+.chips{display:flex; gap:7px; flex-wrap:wrap}
+.chip{border:1px solid var(--line); background:var(--paper); color:var(--rock); padding:6px 13px; border-radius:999px; cursor:pointer; font-family:'Barlow Condensed'; font-weight:600; font-size:15px; letter-spacing:.02em; transition:.15s}
+.chip:hover{border-color:var(--glacier-soft); color:var(--glacier)}
+.chip.on{background:var(--glacier); border-color:var(--glacier); color:#fff}
+.search{margin-left:auto; border:1px solid var(--line); background:var(--paper); color:var(--ink); border-radius:10px; padding:8px 12px; font-family:'Barlow'; font-size:15px; min-width:180px}
+.search:focus{outline:2px solid var(--glacier-soft); outline-offset:1px}
+.tbl-scroll{overflow-x:auto; border:1px solid var(--line); border-radius:14px; background:var(--paper)}
+table{border-collapse:collapse; width:100%; min-width:680px; font-size:15px}
+thead th{font-family:'Barlow Condensed'; font-weight:600; font-size:15px; letter-spacing:.03em; color:var(--rock); text-align:left; padding:13px 14px; border-bottom:1px solid var(--line); white-space:nowrap; cursor:pointer; user-select:none; position:sticky; top:0; background:var(--paper)}
+thead th.n, tbody td.n{text-align:right}
+thead th:hover{color:var(--glacier)}
+thead th .ar{opacity:.35; font-size:12px; margin-left:3px}
+thead th.sort .ar{opacity:1; color:var(--glacier)}
+tbody td{padding:11px 14px; border-bottom:1px solid var(--line-soft); vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--paper2)}
+.nm-cell{font-weight:500; color:var(--ink)}
+.tag{display:inline-block; font-family:'Barlow Condensed'; font-weight:600; font-size:12.5px; letter-spacing:.03em; padding:2px 8px; border-radius:6px; background:var(--glacier-soft); color:var(--glacier-deep); white-space:nowrap}
+.tag.g{background:var(--alpenglow-soft); color:var(--alpenglow)}
+.q-badge{font-family:'Barlow Condensed'; font-weight:700}
+.q-badge.hi{color:var(--alpenglow)}
+.count{color:var(--faint); font-size:13.5px; margin:10px 2px 0}
+
+footer{margin:64px 0 40px; padding-top:22px; border-top:1px solid var(--line); color:var(--faint); font-size:13.5px}
+footer p{margin:6px 0}
+
+@media (max-width:760px){
+  .stats{grid-template-columns:1fr 1fr}
+  .peaks{grid-template-columns:1fr 1fr}
+  .charts{grid-template-columns:1fr}
+  .search{margin-left:0; width:100%}
+}
+@media (prefers-reduced-motion:no-preference){
+  .ridge path.stroke{stroke-dasharray:var(--len); stroke-dashoffset:var(--len); animation:draw 1.8s ease-out forwards}
+  .ridge .glow{opacity:0; animation:pop .5s ease-out forwards; animation-delay:1.6s}
+}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{to{opacity:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="mark">LOGBOOK<b>·</b>ALPINISMO</div>
+    <button class="tgl" id="tgl" aria-label="Cambia tema"></button>
+  </div>
+
+  <header class="hero">
+    <h1>Fin dove<br>arriva il fiato</h1>
+    <p class="lead" id="lead"></p>
+    <div class="ridge"><svg id="ridge" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+    <div class="ridge-cap">
+      <span>Ogni picco è una salita, in ordine di data.</span>
+      <span><span class="legdot" style="background:var(--glacier)"></span>salita</span>
+      <span><span class="legdot" style="background:var(--alpenglow)"></span>oltre 4000 m</span>
+    </div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <section>
+    <div class="sec-h"><h2>I quattro 4000</h2><span class="hint">le cime sopra quota 4000 m</span></div>
+    <div class="peaks" id="peaks"></div>
+  </section>
+
+  <section>
+    <div class="sec-h"><h2>Come sono cresciute le stagioni</h2><span class="hint">dislivello e quota, anno per anno</span></div>
+    <div class="charts">
+      <div class="card"><h3>Dislivello positivo per anno</h3><div class="chart-box"><canvas id="chYear"></canvas></div></div>
+      <div class="card"><h3>Quota massima, salita per salita</h3><div class="chart-box"><canvas id="chScatter"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-h"><h2>Tutte le salite</h2><span class="hint" id="tcount"></span></div>
+    <div class="controls">
+      <div class="chips" id="chips"></div>
+      <input class="search" id="search" type="search" placeholder="Cerca una salita…" aria-label="Cerca">
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr id="thead"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="count" id="rowcount"></p>
+  </section>
+
+  <footer>
+    <p>Diario generato dai dati Strava (export del <span id="gen"></span>). Pagina statica e autonoma: nessun tracciamento, nessuna richiesta esterna oltre ai font e alla libreria dei grafici.</p>
+    <p>In Strava l'alpinismo non ha una categoria propria: sono incluse le attività di tipo escursione, arrampicata, ciaspole e snowboard. La colonna “disciplina” è dedotta da quota e nome dell'uscita, quindi indicativa.</p>
+  </footer>
+
+</div>
+
+<script>
+const DATA = {"generated": "18/09/2026", "ascents": [{"d": "2026-09-06", "y": 2026, "n": "Giretto verso il Cosmiques", "t": "Escursione", "km": 6.3, "dp": 377, "q": 3406, "sec": 13677, "cat": "q3000", "disc": "Alta quota"}, {"d": "2026-09-05", "y": 2026, "n": "Aiguille Marbrees", "t": "Escursione", "km": 8.2, "dp": 354, "q": 3516, "sec": 20369, "cat": "q3000", "disc": "Alta quota"}, {"d": "2026-08-29", "y": 2026, "n": "Val di Ledro - via il sogno di Carlo + il sogno continua ☀️", "t": "Escursione", "km": 4.9, "dp": 449, "q": 602, "sec": 18451, "cat": "q0", "disc": "Escursione"}, {"d": "2026-08-22", "y": 2026, "n": "Vie Ali di 🦋 e Cappuccio del 🍄", "t": "Escursione", "km": 10.4, "dp": 503, "q": 312, "sec": 19833, "cat": "q0", "disc": "Escursione"}, {"d": "2026-08-19", "y": 2026, "n": "Ferrata delle Trincee e Torre dell’Eremita 🪨povera Marmolada 😢", "t": "Escursione", "km": 12.4, "dp": 1072, "q": 2715, "sec": 23489, "cat": "q2000", "disc": "Via ferrata"}, {"d": "2026-08-14", "y": 2026, "n": "Rif Monte Orsaro, Cusna, Rif Battisti e pappardella al cinghiale 🐗", "t": "Escursione", "km": 20.2, "dp": 1328, "q": 2120, "sec": 23136, "cat": "q2000", "disc": "Escursione"}, {"d": "2026-08-01", "y": 2026, "n": "Monte Bishorn 4151 🇨🇭", "t": "Escursione", "km": 8.8, "dp": 1047, "q": 4160, "sec": 24310, "cat": "q4000", "disc": "Alta quota"}, {"d": "2026-07-31", "y": 2026, "n": "Zinal - Cabane de Tracuit", "t": "Escursione", "km": 7.4, "dp": 1577, "q": 3257, "sec": 13668, "cat": "q3000", "disc": "Alta quota"}, {"d": "2026-07-19", "y": 2026, "n": "Rif Gnifetti - Capanna Margherita 🌼❄️", "t": "Escursione", "km": 10.7, "dp": 1224, "q": 4571, "sec": 30907, "cat": "q4000", "disc": "Alta quota"}, {"d": "2026-07-18", "y": 2026, "n": "Indren - Rif Gnifetti", "t": "Escursione", "km": 2.6, "dp": 394, "q": 3631, "sec": 7462, "cat": "q3000", "disc": "Alta quota"}, {"d": "2026-06-21", "y": 2026, "n": "(Quasi) cima Adamello, a mai più 👋😳", "t": "Escursione", "km": 20.4, "dp": 519, "q": 3207, "sec": 44215, "cat": "q3000", "disc": "Alta quota"}, {"d": "2026-06-20", "y": 2026, "n": "Lobbia alta da rif. Caduti", "t": "Escursione", "km": 1.1, "dp": 194, "q": 3194, "sec": 5026, "cat": "q3000", "disc": "Alta quota"}, {"d": "2026-06-20", "y": 2026, "n": "Salita al rif. Caduti dal rif. Bedole, sentiero Matarot 🥵", "t": "Escursione", "km": 9.9, "dp": 1441, "q": 3027, "sec": 20144, "cat": "q3000", "disc": "Alta quota"}, {"d": "2026-05-30", "y": 2026, "n": "Monti Roen e Testa Nera da passo della Mendola 🔆🐝🌲", "t": "Escursione", "km": 15.9, "dp": 843, "q": 2112, "sec": 20397, "cat": "q2000", "disc": "Escursione"}, {"d": "2026-05-29", "y": 2026, "n": "Monte Laugen da passo Palade 🏞️", "t": "Escursione", "km": 11.3, "dp": 931, "q": 2396, "sec": 20624, "cat": "q2000", "disc": "Escursione"}, {"d": "2026-05-17", "y": 2026, "n": "Sentiero delle Creste Pregasina", "t": "Escursione", "km": 16.5, "dp": 1183, "q": 1348, "sec": 23334, "cat": "q1000", "disc": "Escursione"}, {"d": "2026-05-09", "y": 2026, "n": "Doccione - Libro Aperto", "t": "Escursione", "km": 14.2, "dp": 1002, "q": 1930, "sec": 18419, "cat": "q1000", "disc": "Escursione"}, {"d": "2026-05-01", "y": 2026, "n": "Traversata Giovo Rondinaio e taglione", "t": "Escursione", "km": 7.4, "dp": 608, "q": 1964, "sec": 12828, "cat": "q1000", "disc": "Escursione"}, {"d": "2026-04-25", "y": 2026, "n": "Falesia Monsummano Terme + grigliata 🍖 ☀️", "t": "Escursione", "km": 6.8, "dp": 204, "q": 170, "sec": 30327, "cat": "q0", "disc": "Escursione"}, {"d": "2026-04-12", "y": 2026, "n": "Canale a caso Cima di Menna", "t": "Escursione", "km": 14.0, "dp": 1161, "q": 2057, "sec": 27075, "cat": "q2000", "disc": "Escursione"}, {"d": "2026-04-03", "y": 2026, "n": "Via Cresta delle Postazioni, monte Cengio 🥰☀️", "t": "Escursione", "km": 3.9, "dp": 46, "q": 1265, "sec": 15016, "cat": "q1000", "disc": "Escursione"}, {"d": "2026-03-29", "y": 2026, "n": "Vie Pollice Verde e Sperone del Forte", "t": "Escursione", "km": 10.1, "dp": 425, "q": 441, "sec": 25127, "cat": "q0", "disc": "Escursione"}, {"d": "2026-03-14", "y": 2026, "n": "Vajo Fratta Grande cordate Nadri 🎀🎀", "t": "Escursione", "km": 11.6, "dp": 675, "q": 1690, "sec": 26120, "cat": "q1000", "disc": "Escursione"}, {"d": "2026-03-08", "y": 2026, "n": "Secondo canale da dx Corno alle Scale", "t": "Escursione", "km": 11.3, "dp": 441, "q": 1776, "sec": 20858, "cat": "q1000", "disc": "Escursione"}, {"d": "2026-02-28", "y": 2026, "n": "Cascate malga Sorgazza", "t": "Escursione", "km": 10.1, "dp": 594, "q": 1593, "sec": 30710, "cat": "q1000", "disc": "Escursione"}, {"d": "2026-02-21", "y": 2026, "n": "Canale centrale del Giovo", "t": "Escursione", "km": 10.3, "dp": 546, "q": 1886, "sec": 21035, "cat": "q1000", "disc": "Escursione"}, {"d": "2026-01-05", "y": 2026, "n": "Salita a cima Giaidet da Illegio passando per la pieve di San Floriano", "t": "Escursione", "km": 9.5, "dp": 665, "q": 1048, "sec": 11988, "cat": "q1000", "disc": "Escursione"}, {"d": "2026-01-04", "y": 2026, "n": "Salita (quasi 😆) al Col Gentile da Raveo", "t": "Escursione", "km": 20.7, "dp": 1474, "q": 1874, "sec": 25517, "cat": "q1000", "disc": "Escursione"}, {"d": "2026-01-02", "y": 2026, "n": "Salita vajo Giaron della Scala e discesa vajo dal Cengio", "t": "Escursione", "km": 10.4, "dp": 736, "q": 1960, "sec": 21227, "cat": "q1000", "disc": "Escursione"}, {"d": "2025-12-27", "y": 2025, "n": "Cima Portule da malga Larici ❄️🏔️", "t": "Escursione", "km": 17.4, "dp": 842, "q": 2296, "sec": 23059, "cat": "q2000", "disc": "Escursione"}, {"d": "2025-12-21", "y": 2025, "n": "Cima Palon via delle creste", "t": "Escursione", "km": 16.6, "dp": 1116, "q": 2187, "sec": 23956, "cat": "q2000", "disc": "Escursione"}, {"d": "2025-12-13", "y": 2025, "n": "Cresta Alpe di Succiso da passo del Cerreto", "t": "Escursione", "km": 17.9, "dp": 928, "q": 1999, "sec": 28049, "cat": "q1000", "disc": "Escursione"}, {"d": "2025-12-09", "y": 2025, "n": "Grigna versante Nord", "t": "Escursione", "km": 18.1, "dp": 1230, "q": 2378, "sec": 26410, "cat": "q2000", "disc": "Escursione"}, {"d": "2025-12-07", "y": 2025, "n": "Secondo canalino Corno alle scale e cresta fino al Lago Scaffaiolo", "t": "Escursione", "km": 12.5, "dp": 579, "q": 1929, "sec": 20608, "cat": "q1000", "disc": "Escursione"}, {"d": "2025-11-29", "y": 2025, "n": "Salita cima Costabella da Prada", "t": "Escursione", "km": 15.7, "dp": 1046, "q": 2043, "sec": 22275, "cat": "q2000", "disc": "Escursione"}, {"d": "2025-11-09", "y": 2025, "n": "Salita al monte Corchia, Alpi Apuane", "t": "Escursione", "km": 12.9, "dp": 923, "q": 1618, "sec": 22565, "cat": "q1000", "disc": "Escursione"}, {"d": "2025-10-25", "y": 2025, "n": "Via Eclissi Solare e Tres Facil", "t": "Arrampicata su roccia", "km": 13.1, "dp": 370, "q": 307, "sec": 20549, "cat": "q0", "disc": "Arrampicata"}, {"d": "2025-10-18", "y": 2025, "n": "Via Giocando tra i Diedri, Tessari", "t": "Arrampicata su roccia", "km": 6.1, "dp": 279, "q": 435, "sec": 20140, "cat": "q0", "disc": "Arrampicata"}, {"d": "2025-09-07", "y": 2025, "n": "Ferrata Roda di Vael", "t": "Escursione", "km": 13.3, "dp": 943, "q": 2806, "sec": 27117, "cat": "q2000", "disc": "Via ferrata"}, {"d": "2025-09-06", "y": 2025, "n": "Discesa ghiacciaio Marmolada dopo notte in capanna 🌄❄️", "t": "Escursione", "km": 9.9, "dp": 62, "q": 3205, "sec": 23341, "cat": "q3000", "disc": "Alta quota"}, {"d": "2025-09-05", "y": 2025, "n": "Salita Marmolada ghiacciao ❄️🧊", "t": "Escursione", "km": 10.9, "dp": 1185, "q": 3199, "sec": 24117, "cat": "q3000", "disc": "Alta quota"}, {"d": "2025-08-09", "y": 2025, "n": "Ferrata Lipella e cima Tofana di Rozes dal rif. Dibona", "t": "Escursione", "km": 16.2, "dp": 1872, "q": 3127, "sec": 32342, "cat": "q3000", "disc": "Via ferrata"}, {"d": "2025-07-27", "y": 2025, "n": "Via Pilastro Soldà, monte Baffelan ⛰️🧗‍♂️", "t": "Escursione", "km": 10.3, "dp": 567, "q": 1716, "sec": 29098, "cat": "q1000", "disc": "Escursione"}, {"d": "2025-07-19", "y": 2025, "n": "Rondinaio lombardo, Rondinaio e Giovo", "t": "Escursione", "km": 10.7, "dp": 724, "q": 1964, "sec": 16118, "cat": "q1000", "disc": "Escursione"}, {"d": "2025-07-06", "y": 2025, "n": "Via normale Gran Paradiso mt.4061 dal rif. Chabod", "t": "Escursione", "km": 9.7, "dp": 1363, "q": 4010, "sec": 18769, "cat": "q4000", "disc": "Alta quota"}, {"d": "2025-07-05", "y": 2025, "n": "Salita al rif. Chabod", "t": "Escursione", "km": 7.2, "dp": 895, "q": 2704, "sec": 10403, "cat": "q2000", "disc": "Escursione"}, {"d": "2025-06-22", "y": 2025, "n": "Ritorno rif. Pizzini - Forni", "t": "Escursione", "km": 5.0, "dp": 0, "q": 2697, "sec": 4202, "cat": "q2000", "disc": "Escursione"}, {"d": "2025-06-22", "y": 2025, "n": "Via normale Cevedale", "t": "Escursione", "km": 16.9, "dp": 1069, "q": 3720, "sec": 26966, "cat": "q3000", "disc": "Alta quota"}, {"d": "2025-06-21", "y": 2025, "n": "Avvicinamento rif. Forni - Pizzini", "t": "Escursione", "km": 4.9, "dp": 539, "q": 2693, "sec": 5738, "cat": "q2000", "disc": "Escursione"}, {"d": "2025-06-07", "y": 2025, "n": "Monte Casarola e Alpe di Succiso dal passo dell Scalucchia", "t": "Escursione", "km": 16.2, "dp": 862, "q": 1995, "sec": 21637, "cat": "q1000", "disc": "Escursione"}, {"d": "2025-05-31", "y": 2025, "n": "Torre di Porto Giunco", "t": "Escursione", "km": 7.7, "dp": 90, "q": 58, "sec": 7445, "cat": "q0", "disc": "Escursione"}, {"d": "2025-05-25", "y": 2025, "n": "Guglia Gei via diretta", "t": "Escursione", "km": 9.3, "dp": 803, "q": 1782, "sec": 31838, "cat": "q1000", "disc": "Escursione"}, {"d": "2025-05-10", "y": 2025, "n": "Cresta di Gaino 🧗", "t": "Escursione", "km": 10.7, "dp": 629, "q": 855, "sec": 27723, "cat": "q0", "disc": "Escursione"}, {"d": "2025-05-03", "y": 2025, "n": "Andalo - Cima Paganella - ferrata 🦅💨🔗", "t": "Escursione", "km": 22.6, "dp": 1829, "q": 2115, "sec": 30882, "cat": "q2000", "disc": "Via ferrata"}, {"d": "2025-04-26", "y": 2025, "n": "Sentiero del Luf, cima Comer, cima Denervo", "t": "Escursione", "km": 14.6, "dp": 1058, "q": 1440, "sec": 19740, "cat": "q1000", "disc": "Escursione"}, {"d": "2025-04-20", "y": 2025, "n": "Escursione mattutina", "t": "Escursione", "km": 12.2, "dp": 320, "q": 379, "sec": 8168, "cat": "q0", "disc": "Escursione"}, {"d": "2025-04-12", "y": 2025, "n": "Escursione mattutina", "t": "Escursione", "km": 7.0, "dp": 394, "q": 1039, "sec": 27721, "cat": "q1000", "disc": "Escursione"}, {"d": "2025-04-05", "y": 2025, "n": "Ferrata Rio Salagoni e caduti di Nassiriya con Anna, Garu e Fra", "t": "Escursione", "km": 4.5, "dp": 205, "q": 375, "sec": 9304, "cat": "q0", "disc": "Via ferrata"}, {"d": "2025-03-02", "y": 2025, "n": "Ferrata Hoachwool, caplet e giornata spettacolare ☀️😎", "t": "Escursione", "km": 12.3, "dp": 836, "q": 1144, "sec": 19861, "cat": "q1000", "disc": "Via ferrata"}, {"d": "2025-02-15", "y": 2025, "n": "Ferrata Favogna 🧗", "t": "Escursione", "km": 16.0, "dp": 968, "q": 1125, "sec": 22698, "cat": "q1000", "disc": "Via ferrata"}, {"d": "2025-02-02", "y": 2025, "n": "Ferrata Rio Secco", "t": "Escursione", "km": 4.9, "dp": 418, "q": 612, "sec": 10142, "cat": "q0", "disc": "Via ferrata"}, {"d": "2025-01-06", "y": 2025, "n": "Scarpinata Tre Croci", "t": "Escursione", "km": 10.9, "dp": 336, "q": 401, "sec": 8159, "cat": "q0", "disc": "Escursione"}, {"d": "2024-12-23", "y": 2024, "n": "Ferrate anelli delle Anguane (F1, F2, F3, F5, F10, F9)", "t": "Escursione", "km": 5.3, "dp": 508, "q": 668, "sec": 15491, "cat": "q0", "disc": "Escursione"}, {"d": "2024-11-16", "y": 2024, "n": "Sentiero Falcipieri e 52 gallerie", "t": "Escursione", "km": 11.2, "dp": 1004, "q": 1940, "sec": 22371, "cat": "q1000", "disc": "Escursione"}, {"d": "2024-11-03", "y": 2024, "n": "Apuane meridionali: monti Matanna, Nona, Croce", "t": "Escursione", "km": 13.5, "dp": 833, "q": 1269, "sec": 23105, "cat": "q1000", "disc": "Escursione"}, {"d": "2024-11-01", "y": 2024, "n": "Ferrata Campalani e cima Carega, giornata super ☀️", "t": "Escursione", "km": 15.6, "dp": 996, "q": 2232, "sec": 23895, "cat": "q2000", "disc": "Via ferrata"}, {"d": "2024-10-12", "y": 2024, "n": "Ferrata val del Ri 🦕", "t": "Escursione", "km": 4.6, "dp": 640, "q": 617, "sec": 10044, "cat": "q0", "disc": "Via ferrata"}, {"d": "2024-10-12", "y": 2024, "n": "Ferrata Marangoni 💣", "t": "Escursione", "km": 5.1, "dp": 547, "q": 548, "sec": 9652, "cat": "q0", "disc": "Via ferrata"}, {"d": "2024-10-05", "y": 2024, "n": "Ferrata Croce di Fai", "t": "Escursione", "km": 7.0, "dp": 604, "q": 1486, "sec": 14647, "cat": "q1000", "disc": "Via ferrata"}, {"d": "2024-08-16", "y": 2024, "n": "Monte Cimone", "t": "Escursione", "km": 11.9, "dp": 704, "q": 2140, "sec": 13555, "cat": "q2000", "disc": "Escursione"}, {"d": "2024-08-13", "y": 2024, "n": "Piramide Vincent 4215 e Balmenhorn 4167 🌄", "t": "Escursione", "km": 11.2, "dp": 677, "q": 4168, "sec": 19549, "cat": "q4000", "disc": "Alta quota"}, {"d": "2024-08-12", "y": 2024, "n": "Rifugio Mantova e Gnifetti da punta Indren", "t": "Escursione", "km": 8.0, "dp": 1986, "q": 3621, "sec": 20238, "cat": "q3000", "disc": "Alta quota"}, {"d": "2024-08-08", "y": 2024, "n": "Dolomiti di Brenta Trek tappa #3", "t": "Escursione", "km": 21.8, "dp": 567, "q": 2643, "sec": 28474, "cat": "q2000", "disc": "Escursione"}, {"d": "2024-08-07", "y": 2024, "n": "Dolomiti di Brenta Trek tappa #2", "t": "Escursione", "km": 12.4, "dp": 844, "q": 2598, "sec": 18119, "cat": "q2000", "disc": "Escursione"}, {"d": "2024-08-06", "y": 2024, "n": "Dolomiti di Brenta Trek tappa #1", "t": "Escursione", "km": 20.6, "dp": 1888, "q": 2440, "sec": 25987, "cat": "q2000", "disc": "Escursione"}, {"d": "2024-08-02", "y": 2024, "n": "Pietra with David Kiurba 😃", "t": "Escursione", "km": 5.8, "dp": 330, "q": 1038, "sec": 9164, "cat": "q1000", "disc": "Escursione"}, {"d": "2024-07-27", "y": 2024, "n": "Ferrata Rio Sallagoni 🤩", "t": "Escursione", "km": 3.3, "dp": 228, "q": 389, "sec": 5849, "cat": "q0", "disc": "Via ferrata"}, {"d": "2024-07-27", "y": 2024, "n": "Ferrata Colodri 🦅", "t": "Escursione", "km": 5.3, "dp": 337, "q": 370, "sec": 11325, "cat": "q0", "disc": "Via ferrata"}, {"d": "2024-07-13", "y": 2024, "n": "Ferrate cima Capi e cima Rocca, trop cheld 🔥", "t": "Escursione", "km": 11.8, "dp": 829, "q": 953, "sec": 23264, "cat": "q0", "disc": "Escursione"}, {"d": "2024-06-30", "y": 2024, "n": "Ferrata Gerardo Sega dal rif. Monte Baldo", "t": "Escursione", "km": 13.3, "dp": 892, "q": 1210, "sec": 20746, "cat": "q1000", "disc": "Via ferrata"}, {"d": "2024-06-16", "y": 2024, "n": "Doppietta ferrate Civago: Barranco del Dolo e monte Penna", "t": "Escursione", "km": 9.7, "dp": 703, "q": 1497, "sec": 20800, "cat": "q1000", "disc": "Escursione"}, {"d": "2024-05-12", "y": 2024, "n": "Ferrata Tordini Galligani, Alpi Apuane 🔗⛰️", "t": "Escursione", "km": 10.4, "dp": 774, "q": 1413, "sec": 24716, "cat": "q1000", "disc": "Via ferrata"}, {"d": "2024-05-04", "y": 2024, "n": "Tripletta ferrate Bismantova (ultimo sole, alpini, orto del mandorlo) 🔥🧗‍♂️", "t": "Escursione", "km": 9.0, "dp": 510, "q": 1043, "sec": 19328, "cat": "q1000", "disc": "Escursione"}, {"d": "2024-04-20", "y": 2024, "n": "Camogli, San Rocco, cima Portofino", "t": "Escursione", "km": 13.6, "dp": 703, "q": 602, "sec": 17672, "cat": "q0", "disc": "Escursione"}, {"d": "2024-04-14", "y": 2024, "n": "Escursione Monte Grappa", "t": "Escursione", "km": 16.1, "dp": 716, "q": 1700, "sec": 21003, "cat": "q1000", "disc": "Escursione"}, {"d": "2023-11-12", "y": 2023, "n": "Ferrata new alla Pietra", "t": "Arrampicata su roccia", "km": 3.9, "dp": 151, "q": 1012, "sec": 14026, "cat": "q1000", "disc": "Arrampicata"}, {"d": "2023-11-11", "y": 2023, "n": "Ferrata degli alpini", "t": "Arrampicata su roccia", "km": 1.5, "dp": 124, "q": 1034, "sec": 5281, "cat": "q1000", "disc": "Arrampicata"}, {"d": "2023-11-11", "y": 2023, "n": "Ferrata dell'ultimo ☀️", "t": "Arrampicata su roccia", "km": 4.5, "dp": 226, "q": 992, "sec": 12397, "cat": "q0", "disc": "Arrampicata"}, {"d": "2023-10-22", "y": 2023, "n": "Punta Larici", "t": "Escursione", "km": 15.3, "dp": 1186, "q": 1174, "sec": 26020, "cat": "q1000", "disc": "Escursione"}, {"d": "2023-09-24", "y": 2023, "n": "Escursione mattutina", "t": "Escursione", "km": 22.1, "dp": 525, "q": 396, "sec": 12918, "cat": "q0", "disc": "Escursione"}, {"d": "2023-08-23", "y": 2023, "n": "Rif. Contrin, passo-cima Ombretta, Rif. Falier, passo Ombrettola, Rif. Contrin", "t": "Escursione", "km": 16.2, "dp": 1540, "q": 2856, "sec": 27786, "cat": "q2000", "disc": "Escursione"}, {"d": "2023-08-22", "y": 2023, "n": "Alba, passo San Nicolò, Rif. Contrin", "t": "Escursione", "km": 11.7, "dp": 1039, "q": 2452, "sec": 20766, "cat": "q2000", "disc": "Escursione"}, {"d": "2023-07-29", "y": 2023, "n": "Super tour delle malghe + cima Castellazzo", "t": "Escursione", "km": 17.3, "dp": 837, "q": 2332, "sec": 20407, "cat": "q2000", "disc": "Escursione"}, {"d": "2023-07-28", "y": 2023, "n": "Pale di San Martino ", "t": "Escursione", "km": 18.8, "dp": 1492, "q": 2643, "sec": 25204, "cat": "q2000", "disc": "Escursione"}, {"d": "2023-07-09", "y": 2023, "n": "Cima carega passando per i rifugi Pertica, Scalorbi, Fraccaioli", "t": "Escursione", "km": 15.8, "dp": 1043, "q": 2231, "sec": 22188, "cat": "q2000", "disc": "Escursione"}, {"d": "2023-05-06", "y": 2023, "n": "Escursione mattutina", "t": "Escursione", "km": 12.1, "dp": 1020, "q": 1578, "sec": 20370, "cat": "q1000", "disc": "Escursione"}, {"d": "2022-10-29", "y": 2022, "n": "Rif. Altissimo Damiano Chiesa", "t": "Escursione", "km": 9.7, "dp": 825, "q": 2076, "sec": 21776, "cat": "q2000", "disc": "Escursione"}, {"d": "2022-10-15", "y": 2022, "n": "Anello intorno a Giovo 🪐", "t": "Escursione", "km": 12.5, "dp": 658, "q": 1916, "sec": 20958, "cat": "q1000", "disc": "Escursione"}, {"d": "2022-08-20", "y": 2022, "n": "Cimone", "t": "Escursione", "km": 15.2, "dp": 828, "q": 2159, "sec": 22175, "cat": "q2000", "disc": "Escursione"}, {"d": "2022-07-30", "y": 2022, "n": "Sauris di Sopra, M. Mörganlaite, M. Pieltinis, Malga Pieltinis, M. Rinderperk", "t": "Escursione", "km": 16.4, "dp": 887, "q": 2027, "sec": 23856, "cat": "q2000", "disc": "Escursione"}, {"d": "2022-07-29", "y": 2022, "n": "Tour delle malghe da Forni di Sopra ( Varmost,  Tartoi,  Tragonia)", "t": "Escursione", "km": 15.8, "dp": 960, "q": 1759, "sec": 19541, "cat": "q1000", "disc": "Escursione"}, {"d": "2022-04-18", "y": 2022, "n": "Farnè - Poggiolforato - Cascate Dardagna - Lago Pratignano", "t": "Escursione", "km": 21.0, "dp": 1087, "q": 1511, "sec": 28959, "cat": "q1000", "disc": "Escursione"}, {"d": "2022-03-25", "y": 2022, "n": "Escursione mattutina", "t": "Escursione", "km": 16.4, "dp": 933, "q": 2056, "sec": 26390, "cat": "q2000", "disc": "Escursione"}, {"d": "2022-03-20", "y": 2022, "n": "Ameglia, Montemarcello, spiaggia Punta Corvo, Tellaro, Zanego, Ameglia", "t": "Escursione", "km": 11.7, "dp": 724, "q": 268, "sec": 20096, "cat": "q0", "disc": "Escursione"}, {"d": "2022-01-16", "y": 2022, "n": "Cascata della Vallesinella", "t": "Escursione", "km": 8.2, "dp": 323, "q": 1426, "sec": 9138, "cat": "q1000", "disc": "Escursione"}, {"d": "2022-01-15", "y": 2022, "n": "Pinzolo", "t": "Snowboard", "km": 52.1, "dp": 3828, "q": 2079, "sec": 23395, "cat": "q2000", "disc": "Sci / Snow"}, {"d": "2022-01-06", "y": 2022, "n": "Saccaggio-Noce-Campolungo-Pietra", "t": "Escursione", "km": 14.4, "dp": 693, "q": 870, "sec": 16893, "cat": "q0", "disc": "Escursione"}, {"d": "2021-10-30", "y": 2021, "n": "Cerreto Laghi - monte La Nuda - passo Belfiore", "t": "Escursione", "km": 15.4, "dp": 750, "q": 1865, "sec": 22687, "cat": "q1000", "disc": "Escursione"}, {"d": "2021-08-15", "y": 2021, "n": "Case Cattalini - Rif. Battisti", "t": "Escursione", "km": 25.5, "dp": 1164, "q": 1836, "sec": 27951, "cat": "q1000", "disc": "Escursione"}, {"d": "2021-07-31", "y": 2021, "n": "Canyoning Malè", "t": "Arrampicata su roccia", "km": 2.5, "dp": 216, "q": 970, "sec": 6930, "cat": "q0", "disc": "Arrampicata"}, {"d": "2021-07-30", "y": 2021, "n": "Doss dei Cembri - monte Vioz 3653", "t": "Escursione", "km": 16.4, "dp": 1957, "q": 3512, "sec": 23725, "cat": "q3000", "disc": "Alta quota"}, {"d": "2021-07-25", "y": 2021, "n": "Cascate Bucamante", "t": "Escursione", "km": 12.0, "dp": 524, "q": 821, "sec": 19685, "cat": "q0", "disc": "Escursione"}, {"d": "2021-07-04", "y": 2021, "n": "Moneglia - Riva Trigoso", "t": "Escursione", "km": 11.8, "dp": 421, "q": 366, "sec": 13658, "cat": "q0", "disc": "Escursione"}, {"d": "2021-07-03", "y": 2021, "n": "Camogli - San Fruttuoso", "t": "Escursione", "km": 8.8, "dp": 537, "q": 266, "sec": 12566, "cat": "q0", "disc": "Escursione"}, {"d": "2021-05-29", "y": 2021, "n": "Escursione mattutina", "t": "Escursione", "km": 17.6, "dp": 773, "q": 2005, "sec": 24092, "cat": "q2000", "disc": "Escursione"}, {"d": "2021-02-06", "y": 2021, "n": "Passo centocroci-monte Rovinoso", "t": "Escursione", "km": 11.7, "dp": 300, "q": 1496, "sec": 19381, "cat": "q1000", "disc": "Escursione"}, {"d": "2020-12-19", "y": 2020, "n": "Ciaspolata senza ciaspole 🏔️", "t": "Racchette da neve", "km": 8.5, "dp": 340, "q": 1859, "sec": 12905, "cat": "q1000", "disc": "Ciaspole"}, {"d": "2020-08-31", "y": 2020, "n": "Punta Telegrafo", "t": "Escursione", "km": 2.7, "dp": 190, "q": 96, "sec": 4099, "cat": "q0", "disc": "Escursione"}, {"d": "2020-08-30", "y": 2020, "n": "Punta Licosa", "t": "Escursione", "km": 3.5, "dp": 40, "q": 44, "sec": 2943, "cat": "q0", "disc": "Escursione"}, {"d": "2019-05-11", "y": 2019, "n": "Levanto-Punta Mesco-Colla di Gritta-Madonna di Soviore-Madonna di Reggio-Vernazza (CAI SVA-591-582-508)", "t": "Escursione", "km": 15.7, "dp": 654, "q": 535, "sec": 23044, "cat": "q0", "disc": "Escursione"}, {"d": "2019-01-27", "y": 2019, "n": "La Romita-passo delle forbici-monte Giovarello CAI 603-601", "t": "Escursione", "km": 9.7, "dp": 696, "q": 1652, "sec": 19008, "cat": "q1000", "disc": "Escursione"}, {"d": "2019-01-13", "y": 2019, "n": "Febbio(rif. Peschiera Zamboni)-monte Cusna CAI 609, 617", "t": "Escursione", "km": 10.9, "dp": 939, "q": 2073, "sec": 26542, "cat": "q2000", "disc": "Escursione"}, {"d": "2019-01-05", "y": 2019, "n": "Giazzera-Monte Pazul-Alpe Alba-Rif. Lancia-Cheserle CAI 101,132", "t": "Escursione", "km": 14.4, "dp": 814, "q": 1830, "sec": 23319, "cat": "q1000", "disc": "Escursione"}, {"d": "2018-12-26", "y": 2018, "n": "Uscita CAI monte Pastello", "t": "Escursione", "km": 12.1, "dp": 687, "q": 1105, "sec": 19700, "cat": "q1000", "disc": "Escursione"}], "byType": {"Ciclismo": 226, "Nuotata": 164, "Escursione": 116, "Corsa": 113, "Camminata": 48, "Pedalata con e-bike": 37, "Allenamento con i pesi": 16, "Yoga": 13, "Arrampicata su roccia": 6, "Allenamento generico": 1, "Snowboard": 1, "Racchette da neve": 1}, "totals": {"n": 124, "dpos": 97048, "km": 1480.0, "qmax": 4570, "first": "2018-12-26", "last": "2026-09-06"}};
+const $ = s => document.querySelector(s);
+
+/* ---------- tema ---------- */
+(function(){
+  let saved=null; try{saved=localStorage.getItem('lb-theme')}catch(e){}
+  if(saved) document.documentElement.setAttribute('data-theme',saved);
+  const sun='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>';
+  const moon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+  function isDark(){const a=document.documentElement.getAttribute('data-theme'); if(a)return a==='dark'; return matchMedia('(prefers-color-scheme:dark)').matches}
+  function paint(){$('#tgl').innerHTML=isDark()?sun:moon}
+  paint();
+  $('#tgl').onclick=()=>{const d=!isDark(); const v=d?'dark':'light'; document.documentElement.setAttribute('data-theme',v); try{localStorage.setItem('lb-theme',v)}catch(e){}; paint(); redrawCharts();};
+})();
+function cvar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+
+/* ---------- helpers ---------- */
+const A = DATA.ascents;
+const T = DATA.totals;
+const fmt = n => n==null?'—':n.toLocaleString('it-IT');
+const itDate = iso => {const [y,m,d]=iso.split('-'); const M=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic']; return d*1+' '+M[m-1]+' '+y};
+const dur = s => {if(s==null)return '—'; const h=Math.floor(s/3600), m=Math.round(s%3600/60); return h+':'+String(m).padStart(2,'0')};
+
+/* ---------- lead + stats ---------- */
+const yFirst=T.first.slice(0,4), yLast=T.last.slice(0,4);
+$('#lead').textContent = `${T.n} salite tra il ${yFirst} e il ${yLast} — dalle falesie di casa ai 4000 del Monte Rosa e del Vallese, messe in fila da quota e dislivello.`;
+$('#gen').textContent = DATA.generated;
+const everest=(T.dpos/8849).toFixed(0);
+const statHtml=[
+  ['num-n',fmt(T.n),'salite in montagna',''],
+  [fmt(T.dpos),'m','dislivello positivo',`≈ ${everest} volte l'Everest dal mare`],
+  [fmt(T.qmax),'m','il punto più alto','Capanna Margherita, Monte Rosa'],
+  ['4','','cime oltre 4000 m','Margherita · V. Vincent · Bishorn · Gran Paradiso'],
+];
+$('#stats').innerHTML = statHtml.map((s,i)=>{
+  const n = i===0?fmt(T.n):(i===2?fmt(T.qmax):(i===1?fmt(T.dpos):'4'));
+  const u = (i===1||i===2)?'<span class="u">m</span>':'';
+  return `<div class="stat"><div class="n">${n}${u}</div><div class="l">${s[2]}</div><div class="s">${s[3]}</div></div>`;
+}).join('');
+
+/* ---------- 4000 cards ---------- */
+const p4=A.filter(a=>a.cat==='q4000').sort((a,b)=>b.q-a.q);
+$('#peaks').innerHTML = p4.map(a=>`<div class="peak"><div class="q">${fmt(a.q)}<span class="u">m</span></div><div class="nm">${a.n}</div><div class="dt">${itDate(a.d)} · ${fmt(a.dp)} m D+</div></div>`).join('');
+
+/* ---------- ridgeline ---------- */
+(function(){
+  const svg=$('#ridge'), W=1000, H=260, pad=6;
+  const chron=[...A].filter(a=>a.q!=null).sort((a,b)=>a.d<b.d?-1:1);
+  const qmax=4700, n=chron.length;
+  const x=i=> pad + i*(W-2*pad)/(n-1);
+  const y=q=> H - pad - (q/qmax)*(H-2*pad);
+  let d='M '+x(0)+' '+H;
+  chron.forEach((a,i)=> d+=' L '+x(i).toFixed(1)+' '+y(a.q).toFixed(1));
+  d+=' L '+x(n-1)+' '+H+' Z';
+  let line='M '+x(0)+' '+y(chron[0].q).toFixed(1);
+  chron.forEach((a,i)=>{ if(i) line+=' L '+x(i).toFixed(1)+' '+y(a.q).toFixed(1); });
+  const glow=chron.map((a,i)=> a.q>=4000?`<circle class="glow" cx="${x(i).toFixed(1)}" cy="${y(a.q).toFixed(1)}" r="4" fill="var(--alpenglow)"/>`:'').join('');
+  svg.innerHTML=`
+    <defs><linearGradient id="gl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--glacier)" stop-opacity=".38"/>
+      <stop offset="1" stop-color="var(--glacier)" stop-opacity=".04"/>
+    </linearGradient></defs>
+    <path d="${d}" fill="url(#gl)"/>
+    <path class="stroke" d="${line}" fill="none" stroke="var(--glacier)" stroke-width="1.6" stroke-linejoin="round"/>
+    ${glow}`;
+  const len=svg.querySelector('.stroke').getTotalLength();
+  svg.querySelector('.stroke').style.setProperty('--len',len);
+})();
+
+/* ---------- charts ---------- */
+let chYear, chScatter;
+function yearAgg(){
+  const m={}; A.forEach(a=>{ if(!m[a.y])m[a.y]={dp:0,n:0}; m[a.y].dp+=a.dp||0; m[a.y].n++; });
+  const ys=Object.keys(m).map(Number).sort();
+  return {ys, dp:ys.map(y=>m[y].dp)};
+}
+function buildCharts(){
+  Chart.defaults.font.family='Barlow, sans-serif';
+  Chart.defaults.font.size=13;
+  const rock=cvar('--rock'), grid=cvar('--line'), glac=cvar('--glacier'), glow=cvar('--alpenglow');
+  const ya=yearAgg();
+  chYear=new Chart($('#chYear'),{type:'bar',
+    data:{labels:ya.ys,datasets:[{data:ya.dp,backgroundColor:glac,borderRadius:4,maxBarThickness:46}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>fmt(c.raw)+' m D+'}}},
+      scales:{x:{grid:{display:false},ticks:{color:rock}},
+        y:{grid:{color:grid},ticks:{color:rock,callback:v=>v/1000+'k'}}}}});
+  const pts=A.filter(a=>a.q!=null).map(a=>({x:+a.d.slice(0,4)+(+a.d.slice(5,7)-1)/12,y:a.q,n:a.n,d:a.d,hi:a.q>=4000}));
+  chScatter=new Chart($('#chScatter'),{type:'scatter',
+    data:{datasets:[{data:pts,parsing:false,
+      pointBackgroundColor:pts.map(p=>p.hi?glow:glac),
+      pointRadius:pts.map(p=>p.hi?5:3),pointHoverRadius:7,pointBorderColor:'transparent'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{title:c=>pts[c[0].dataIndex].n,label:c=>fmt(c.raw.y)+' m · '+itDate(pts[c[0].dataIndex].d)}}},
+      scales:{x:{grid:{color:grid},ticks:{color:rock,stepSize:1,callback:v=>Math.round(v)},min:ya.ys[0]-0.3,max:ya.ys[ya.ys.length-1]+0.3},
+        y:{grid:{color:grid},ticks:{color:rock,callback:v=>fmt(v)+' m'},suggestedMin:0}}}});
+}
+function redrawCharts(){ if(chYear){chYear.destroy();chScatter.destroy(); buildCharts();} }
+if(window.Chart) buildCharts();
+
+/* ---------- tabella ---------- */
+const cols=[['d','Data',0],['n','Salita',0],['disc','Disciplina',0],['km','Dist',1],['dp','D+',1],['q','Quota',1],['sec','Durata',1]];
+let sortKey='d', sortDir=-1, filter='all', query='';
+const filters={all:()=>true,q4000:a=>a.cat==='q4000',q3000:a=>a.q>=3000,fer:a=>a.disc==='Via ferrata',arr:a=>a.disc==='Arrampicata'};
+const chipDefs=[['all','Tutte'],['q4000','4000+'],['q3000','3000+'],['fer','Ferrate'],['arr','Arrampicata']];
+$('#chips').innerHTML=chipDefs.map(c=>`<button class="chip${c[0]==='all'?' on':''}" data-f="${c[0]}">${c[1]}</button>`).join('');
+$('#thead').innerHTML=cols.map(c=>`<th data-k="${c[0]}" class="${c[2]?'n':''}">${c[1]}<span class="ar"></span></th>`).join('');
+
+function render(){
+  let rows=A.filter(filters[filter]);
+  if(query){const qq=query.toLowerCase(); rows=rows.filter(a=>a.n.toLowerCase().includes(qq)||a.disc.toLowerCase().includes(qq));}
+  rows.sort((a,b)=>{let x=a[sortKey],y=b[sortKey]; if(x==null)x=-1; if(y==null)y=-1; if(sortKey==='n'||sortKey==='disc'){return x.localeCompare(y)*sortDir;} return (x<y?-1:x>y?1:0)*sortDir;});
+  $('#tbody').innerHTML=rows.map(a=>{
+    const hi=a.q>=4000;
+    return `<tr>
+      <td style="white-space:nowrap;color:var(--rock)">${itDate(a.d)}</td>
+      <td class="nm-cell">${a.n}</td>
+      <td><span class="tag${a.disc==='Via ferrata'||a.disc==='Arrampicata'?' g':''}">${a.disc}</span></td>
+      <td class="n">${a.km==null?'—':a.km.toLocaleString('it-IT')}</td>
+      <td class="n">${fmt(a.dp)}</td>
+      <td class="n"><span class="q-badge${hi?' hi':''}">${fmt(a.q)}</span></td>
+      <td class="n" style="color:var(--rock)">${dur(a.sec)}</td>
+    </tr>`;}).join('');
+  $('#rowcount').textContent=`${rows.length} salite mostrate`;
+  document.querySelectorAll('#thead th').forEach(th=>{th.classList.toggle('sort',th.dataset.k===sortKey); th.querySelector('.ar').textContent=th.dataset.k===sortKey?(sortDir<0?'▼':'▲'):'';});
+}
+$('#tcount').textContent=`${A.length} in tutto`;
+document.querySelectorAll('#thead th').forEach(th=>th.onclick=()=>{const k=th.dataset.k; if(k===sortKey)sortDir*=-1; else{sortKey=k; sortDir=(k==='n'||k==='disc')?1:-1;} render();});
+$('#chips').onclick=e=>{const b=e.target.closest('.chip'); if(!b)return; filter=b.dataset.f; document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===b)); render();};
+$('#search').oninput=e=>{query=e.target.value.trim(); render();};
+render();
+</script>
+</body>
+</html>
